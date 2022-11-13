@@ -10,99 +10,49 @@ if( -not $repository )
 
 Write-Host Downloading native binaries from GitHub Releases...
 
-if (Test-Path $PSScriptRoot\deps\cimgui\)
-{
-    Remove-Item $PSScriptRoot\deps\cimgui\ -Force -Recurse | Out-Null
-}
-New-Item -ItemType Directory -Force -Path $PSScriptRoot\deps\cimgui\linux-x64 | Out-Null
-New-Item -ItemType Directory -Force -Path $PSScriptRoot\deps\cimgui\osx | Out-Null
-New-Item -ItemType Directory -Force -Path $PSScriptRoot\deps\cimgui\win-x86 | Out-Null
-New-Item -ItemType Directory -Force -Path $PSScriptRoot\deps\cimgui\win-x64 | Out-Null
-New-Item -ItemType Directory -Force -Path $PSScriptRoot\deps\cimgui\win-arm64 | Out-Null
-
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $client = New-Object System.Net.WebClient
-$client.DownloadFile(
-    "$repository/releases/download/$tag/cimgui.win-x86.dll",
-    "$PSScriptRoot/deps/cimgui/win-x86/cimgui.dll")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download x86 cimgui.dll. This most likely indicates the Windows native build failed."
-    exit
+
+function DownloadFile {
+    param (
+        [string]$remoteFile,
+        [string]$localDir,
+        [string]$localFile
+    )
+
+    New-Item -ItemType Directory -Force -Path $PSScriptRoot\$localDir | Out-Null
+
+    $client.DownloadFile(
+        "$repository/releases/download/$tag/$remoteFile",
+        "$PSScriptRoot/$localDir/$localFile")
+    if( -not $? )
+    {
+        $msg = $Error[0].Exception.Message
+        Write-Error "Couldn't download $remoteFile."
+        exit
+    }
+
+    Write-Host "- $remoteFile"
 }
 
-Write-Host "- cimgui.dll (x86)"
+function DownloadFileSet {
+    param (
+        [string]$setName
+    )
 
-$client.DownloadFile(
-    "$repository/releases/download/$tag/cimgui.win-x64.dll",
-    "$PSScriptRoot/deps/cimgui/win-x64/$configuration/cimgui.dll")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download x64 cimgui.dll. This most likely indicates the Windows native build failed."
-    exit
+    if (Test-Path $PSScriptRoot\deps\$setName\)
+    {
+        Remove-Item $PSScriptRoot\deps\$setName\ -Force -Recurse | Out-Null
+    }
+
+    DownloadFile "$setName.win-x86.dll" "deps/$setName/win-x86" "$setName.dll"
+    DownloadFile "$setName.win-x64.dll" "deps/$setName/win-x64" "$setName.dll"
+    DownloadFile "$setName.so" "deps/$setName/linux-x64" "$setName.so"
+    DownloadFile "$setName.dylib" "deps/$setName/osx" "$setName.dylib"
+    DownloadFile "$setName-definitions.json" "src/CodeGenerator/definitions/$setName" "definitions.json"
+    DownloadFile "$setName-structs_and_enums.json" "src/CodeGenerator/definitions/$setName" "structs_and_enums.json"
 }
 
-Write-Host "- cimgui.dll (x64)"
-
-$client.DownloadFile(
-    "$repository/releases/download/$tag/cimgui.win-arm64.dll",
-    "$PSScriptRoot/deps/cimgui/win-arm64/$configuration/cimgui.dll")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download arm64 cimgui.dll. This most likely indicates the Windows native build failed."
-    exit
-}
-
-Write-Host "- cimgui.dll (arm64)"
-
-$client.DownloadFile(
-    "$repository/releases/download/$tag/cimgui.so",
-    "$PSScriptRoot/deps/cimgui/linux-x64/cimgui.so")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download cimgui.so. This most likely indicates the Linux native build failed."
-    exit
-}
-
-Write-Host - cimgui.so
-
-$client.DownloadFile(
-    "$repository/releases/download/$tag/cimgui.dylib",
-    "$PSScriptRoot/deps/cimgui/osx/cimgui.dylib")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download cimgui.dylib. This most likely indicates the macOS native build failed."
-    exit
-}
-
-Write-Host "- cimgui.dylib"
-
-$client.DownloadFile(
-    "https://github.com/mellinoe/imgui.net-nativebuild/releases/download/$tag/definitions.json",
-    "$PSScriptRoot/src/CodeGenerator/definitions/cimgui/definitions.json")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download definitions.json."
-    exit
-}
-
-Write-Host - definitions.json
-
-$client.DownloadFile(
-    "https://github.com/mellinoe/imgui.net-nativebuild/releases/download/$tag/structs_and_enums.json",
-    "$PSScriptRoot/src/CodeGenerator/definitions/cimgui/structs_and_enums.json")
-if( -not $? )
-{
-    $msg = $Error[0].Exception.Message
-    Write-Error "Couldn't download structs_and_enums.json."
-    exit
-}
-
-Write-Host - structs_and_enums.json
+DownloadFileSet cimgui
+DownloadFileSet cimguizmo
