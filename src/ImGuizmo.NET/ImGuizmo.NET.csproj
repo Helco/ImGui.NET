@@ -23,4 +23,22 @@
   <ItemGroup>
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\deps\cimguizmo\win-x86\cimguizmo.dll">
+      <PackagePath>runtimes/win-x86/native</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <Content Include="..\..\deps\cimguizmo\win-x64\cimguizmo.dll">
+      <PackagePath>runtimes/win-x64/native</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <Content Include="..\..\deps\cimguizmo\linux-x64\cimguizmo.so">
+      <PackagePath>runtimes/linux-x64/native/libcimguizmo.so</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+    <Content Include="..\..\deps\cimguizmo\osx\cimguizmo.dylib">
+      <PackagePath>runtimes/osx/native/libcimguizmo.dylib</PackagePath>
+      <Pack>true</Pack>
+    </Content>
+  </ItemGroup>
 </Project>
